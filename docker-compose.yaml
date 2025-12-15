@@ -1,0 +1,224 @@
+version: "3.8"
+
+services:
+  # Инфраструктура: Брокер сообщений
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - microservices-net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Инфраструктура: База данных
+  postgres:
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: credit-application
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - microservices-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Инфраструктура: Трассировка
+  zipkin:
+    image: openzipkin/zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - microservices-net
+
+  # Инфраструктура: Метрики
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - microservices-net
+
+  grafana:
+    image: grafana/grafana:11.3.1
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      prometheus:
+        condition: service_started
+    networks:
+      - microservices-net
+
+
+  # Микросервисы
+  sop-credit-rating:
+    build: ./sop-credit-rating
+    environment:
+      - SERVER_PORT=8080
+
+      - SPRING_DATASOURCE_HOST=postgres
+      - SPRING_DATASOURCE_PORT=5432
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/credit-application
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      zipkin:
+        condition: service_started
+    networks:
+      - microservices-net
+    restart: unless-stopped 
+
+
+  sop-audit-service:
+    user: "0:0"
+
+    build: ./sop-audit-service
+    environment:
+      - SERVER_PORT=8081
+
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+
+      - AUDIT_CSV_BASE_DIR=/app/data/csv
+      - AUDIT_REPORTS_BASE_DIR=/app/data/reports
+
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+    ports:
+      - "8081:8081"
+    volumes:
+      - audit-csv:/app/data/csv
+      - audit-reports:/app/data/reports
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      zipkin:
+        condition: service_started
+    networks:
+      - microservices-net
+    restart: unless-stopped
+  
+  sop-grpcclient-calc:
+    build: ./sop-grpcclient-calc
+    environment:
+      - SERVER_PORT=8082
+
+      - GRPC_CLIENT_CREDIT-CALC-SERVICE_ADDRESS=static://sop-grpcserver-calc:9090
+      - GRPC_CLIENT_CREDIT-CALC-SERVICE_NEGOTIATION_TYPE=plaintext
+
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+    ports:
+      - "8082:8082"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      sop-grpcserver-calc:
+        condition: service_started
+      zipkin:
+        condition: service_started
+    networks:
+      - microservices-net
+    restart: unless-stopped
+  
+  
+  sop-grpcserver-calc:
+    build: ./sop-grpcserver-calc
+    environment:
+      - GRPC_SERVER_PORT=9090
+      - SERVER_PORT=8083
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+    ports:
+      - "9091:9090"  # gRPC
+      - "8083:8083"  # Actuator/Metrics (external:internal)
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      zipkin:
+        condition: service_started
+    networks:
+      - microservices-net
+    restart: unless-stopped
+  
+  sop-notification-service:
+    build: ./sop-notification-service
+    environment:
+      - SERVER_PORT=8084
+
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+    ports:
+      - "8084:8084"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      zipkin:
+        condition: service_started
+    networks:
+      - microservices-net
+    restart: unless-stopped
+
+
+networks:
+  microservices-net:
+    driver: bridge
+
+volumes:
+  rabbitmq-data:
+  postgres-data:
+  prometheus-data:
+  grafana-data:
+  
+  audit-csv:
+  audit-reports:
+

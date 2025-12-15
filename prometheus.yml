@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: "credit-system-microservices"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets:
+          - "sop-credit-rating:8080"
+          - "sop-audit-service:8081"
+          - "sop-grpcclient-calc:8082"
+          - "sop-grpcserver-calc:8083"
+          - "sop-notification-service:8084"
+        labels:
+          environment: "docker"
+          project: "credit-system"
+
+

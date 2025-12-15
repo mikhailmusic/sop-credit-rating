@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "rut.miit.grpc";
+option java_outer_classname = "CreditCalculationProto";
+
+service CreditCalcService {
+  rpc Assess(AssessmentRequest) returns (AssessmentResponse) {}
+  rpc GenerateOffer(OfferRequest) returns (OfferResponse) {}
+}
+
+enum EnumPurpose {
+  PURPOSE_UNKNOWN = 0;
+  CONSUMER = 1;
+  MORTGAGE = 2;
+  AUTO = 3;
+  BUSINESS = 4;
+  EDUCATION = 5;
+  MEDICAL = 6;
+  REFINANCE = 7;
+  SECURED = 8;
+  UNSECURED = 9;
+  OVERDRAFT = 10;
+}
+
+enum EnumEmploymentStatus {
+  EMPLOYMENT_UNKNOWN = 0;
+  EMPLOYED = 1;
+  SELF_EMPLOYED = 2;
+  UNEMPLOYED = 3;
+}
+
+enum EnumRiskLevel {
+  RISK_UNKNOWN = 0;
+  LOW = 1;
+  MEDIUM = 2;
+  HIGH = 3;
+}
+
+message AssessmentRequest {
+  string request_id = 1;
+  string application_id = 2;
+  string client_id = 3;
+  string amount = 4;                     // BigDecimal as string
+  int32 term_months = 5;
+  EnumPurpose purpose = 6;
+  string annual_income = 7;              // BigDecimal as string
+  string total_monthly_debt_payment = 8; // BigDecimal as string
+  EnumEmploymentStatus employment_status = 9;
+  int32 age = 10;
+  int32 history_approved_count = 11;
+  int32 history_rejected_count = 12;
+  int32 payments_delayed_last_12m = 13;
+  int32 max_days_overdue_last_12m = 14;
+  repeated ProductSnapshot available_products = 15;
+}
+
+message ProductSnapshot {
+  string product_id = 1;
+  EnumPurpose purpose = 2;
+  string min_amount = 3;          // BigDecimal as string
+  string max_amount = 4;          // BigDecimal as string
+  int32 min_term_months = 5;
+  int32 max_term_months = 6;
+  string base_apr_min = 7;        // BigDecimal as string
+  string base_apr_max = 8;        // BigDecimal as string
+}
+
+
+message OfferRequest {
+  string request_id = 1;
+  string application_id = 2;
+  string client_id = 3;
+  string credit_score = 4;
+  EnumRiskLevel risk_level = 5;
+  string amount = 6;
+  int32 term_months = 7;
+  EnumPurpose purpose = 8;
+  repeated ProductSnapshot available_products = 9;
+}
+
+
+message AssessmentResponse {
+  string request_id = 1;
+  string application_id = 2;
+  string client_id = 3;
+  string credit_score = 4;        // BigDecimal as string
+  bool approved = 5;
+  EnumRiskLevel risk_level = 6;
+  repeated string rejection_reasons = 7;
+}
+
+message OfferResponse {
+  string request_id = 1;
+  string client_id = 2;
+  string application_id = 3;
+  string product_id = 4;
+
+  string approved_amount = 5;          // BigDecimal as string
+  int32 term_months = 6;
+  string annual_percentage_rate = 7;   // BigDecimal as string
+  string monthly_payment = 8;          // BigDecimal as string
+  string expires_at = 9;               // ISO 8601 (OffsetDateTime)
+}

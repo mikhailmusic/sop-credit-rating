@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Центр уведомлений - Кредитная система</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+            color: #2c3e50;
+            margin: 0;
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        .wrap {
+            max-width: 980px;
+            margin: 0 auto;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .left {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            color: #1a202c;
+        }
+
+        .sub {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status,
+        .btn {
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 14px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            background: #fff;
+            font-size: 14px;
+            line-height: 1;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .btn {
+            border-color: #cbd5e1;
+            color: #475569;
+            cursor: pointer;
+            padding: 0 12px;
+        }
+
+        .btn:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .status {
+            padding: 0 12px;
+        }
+
+        .status.ok {
+            background: #f0fdf4;
+            border-color: #86efac;
+            color: #166534;
+        }
+
+        .status.bad {
+            background: #fef2f2;
+            border-color: #fca5a5;
+            color: #991b1b;
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .websocket-line {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .ping-value {
+            font-size: 14px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .ping-value.active {
+            color: #16a34a;
+        }
+
+        .panel {
+            background: #fff;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .panelHead {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+            flex-wrap: wrap;
+        }
+
+        .panelTitle {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .panelRight {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .counter {
+            font-size: 14px;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-weight: 600;
+        }
+
+        .filter-options {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #3b82f6;
+            margin: 0;
+        }
+
+        .filter-option label {
+            font-size: 14px;
+            color: #475569;
+            cursor: pointer;
+            user-select: none;
+            margin: 0;
+        }
+
+        .feed {
+            height: 500px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .feed::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .feed::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .feed::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .feed::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .card {
+            background: #fff;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .card.offer {
+            border-color: #93c5fd;
+            background: linear-gradient(to bottom right, #fff 0%, #eff6ff 100%);
+        }
+
+        .card.approved {
+            border-color: #86efac;
+            background: linear-gradient(to bottom right, #fff 0%, #f0fdf4 100%);
+        }
+
+        .card.declined {
+            border-color: #fca5a5;
+            background: linear-gradient(to bottom right, #fff 0%, #fef2f2 100%);
+        }
+
+        .meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .type {
+            font-size: 12px;
+            color: #64748b;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .time {
+            font-size: 14px;
+            color: #94a3b8;
+            white-space: nowrap;
+        }
+
+        .title {
+            margin: 0 0 14px;
+            font-size: 17px;
+            font-weight: 700;
+            color: #1a202c;
+            line-height: 1.3;
+        }
+
+        .kv {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 8px 16px;
+            font-size: 13px;
+            flex-grow: 1;
+        }
+
+        .k {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .v {
+            font-size: 14px;
+            color: #334155;
+            word-break: break-all;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            border: 2px solid transparent;
+            letter-spacing: 0.3px;
+        }
+
+        .pill.ok {
+            background: #dcfce7;
+            border-color: #86efac;
+            color: #166534;
+        }
+
+        .pill.bad {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #991b1b;
+        }
+
+        .pill.info {
+            background: #dbeafe;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .reasons {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 2px dashed #e2e8f0;
+        }
+
+        .reasons ul {
+            margin: 8px 0 0;
+            padding-left: 20px;
+        }
+
+        .reasons li {
+            margin: 5px 0;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .empty {
+            flex: 1;
+            color: #94a3b8;
+            font-size: 14px;
+            padding: 32px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            text-align: center;
+            background: #f8fafc;
+        }
+
+        @media (max-width: 768px) {
+            .topbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .panelHead {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .panelRight {
+                width: 100%;
+            }
+
+            .filter-options {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .kv {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+
+            .feed {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+
+    <div class="topbar">
+        <div class="left">
+            <h1>Центр уведомлений - Кредитная система</h1>
+            <div class="websocket-line">
+                <div class="sub">WebSocket: ws://localhost:8084/ws/notifications</div>
+                <div id="pingStatus" class="ping-value">Пинг: –</div>
+            </div>
+        </div>
+        <div class="right">
+            <div id="status" class="status bad">WS: Отключено</div>
+            <button id="clearBtn" class="btn" type="button">Очистить историю</button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panelHead">
+            <div class="panelTitle">Лента событий</div>
+            <div class="panelRight">
+                <div class="filter-options">
+                    <div class="filter-option">
+                        <input type="checkbox" id="filterAssessment" value="ASSESSMENT_COMPLETED" checked>
+                        <label for="filterAssessment">Оценка кредитоспособности</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="filterOffer" value="OFFER_GENERATED" checked>
+                        <label for="filterOffer">Кредитные предложения</label>
+                    </div>
+                </div>
+                <div id="counter" class="counter">Событий: 0</div>
+            </div>
+        </div>
+
+        <div id="feed" class="feed">
+            <div id="empty" class="empty">Событий пока нет. Ожидание уведомлений...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const statusEl = document.getElementById('status');
+    const feedEl = document.getElementById('feed');
+    const emptyEl = document.getElementById('empty');
+    const counterEl = document.getElementById('counter');
+    const clearBtn = document.getElementById('clearBtn');
+    const pingStatusEl = document.getElementById('pingStatus');
+
+    let socket;
+    let count = 0;
+    let pingInterval;
+    let subscriptions = new Set(['ASSESSMENT_COMPLETED', 'OFFER_GENERATED']);
+
+    function updateCounter() {
+        counterEl.textContent = `Событий: ${count}`;
+        emptyEl.style.display = count === 0 ? 'block' : 'none';
+    }
+
+    function updatePingStatus(latency) {
+        if (latency !== null && latency !== undefined) {
+            pingStatusEl.textContent = `Пинг: ${latency} мс`;
+            pingStatusEl.classList.add('active');
+        } else {
+            pingStatusEl.textContent = 'Пинг: ожидание...';
+            pingStatusEl.classList.remove('active');
+        }
+    }
+
+    function resetPingStatus() {
+        pingStatusEl.textContent = 'Пинг: —';
+        pingStatusEl.classList.remove('active');
+    }
+
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '—';
+        return String(str)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
+
+    function formatMoney(amount) {
+        if (amount === null || amount === undefined) return '—';
+        const num = Number(amount);
+        if (Number.isNaN(num)) return escapeHtml(String(amount));
+        return num.toLocaleString('ru-RU', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }) + ' ₽';
+    }
+
+    function formatMonths(months) {
+        if (months === null || months === undefined) return '—';
+        const num = Number(months);
+        if (Number.isNaN(num)) return escapeHtml(String(months));
+
+        const lastDigit = num % 10;
+        const lastTwoDigits = num % 100;
+
+        if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
+            return `${num} месяцев`;
+        }
+        if (lastDigit === 1) {
+            return `${num} месяц`;
+        }
+        if (lastDigit >= 2 && lastDigit <= 4) {
+            return `${num} месяца`;
+        }
+        return `${num} месяцев`;
+    }
+
+    function formatDateTime(dateStr) {
+        if (!dateStr) return '—';
+        const date = new Date(dateStr);
+        if (Number.isNaN(date.getTime())) return escapeHtml(String(dateStr));
+
+        return date.toLocaleString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    function getNow() {
+        return new Date().toLocaleString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    }
+
+    function addCard(htmlContent) {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = htmlContent.trim();
+        const card = wrapper.firstElementChild;
+
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(-10px)';
+        feedEl.prepend(card);
+
+        requestAnimationFrame(() => {
+            card.style.transition = 'all 0.3s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        });
+
+        count++;
+        updateCounter();
+    }
+
+    function renderAssessment(message) {
+        const data = message.data || {};
+        const approved = !!data.approved;
+
+        const cardClass = approved ? 'approved' : 'declined';
+        const statusPill = approved
+            ? '<span class="pill ok">ОДОБРЕНО</span>'
+            : '<span class="pill bad">ОТКЛОНЕНО</span>';
+
+        const reasons = Array.isArray(data.rejectionReasons) ? data.rejectionReasons : [];
+        const reasonsBlock = !approved && reasons.length > 0 ? `
+            <div class="reasons">
+                <div class="k">Причины отклонения:</div>
+                <ul>${reasons.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul>
+            </div>
+        ` : '';
+
+        addCard(`
+            <div class="card ${cardClass}">
+                <div class="meta">
+                    <div class="type">Оценка кредитоспособности</div>
+                    <div class="time">${formatDateTime(message.timestamp) || getNow()}</div>
+                </div>
+
+                <div class="title">Результат оценки ${statusPill}</div>
+
+                <div class="kv">
+                    <div class="k">ID запроса</div><div class="v">${escapeHtml(data.requestId)}</div>
+                    <div class="k">ID заявки</div><div class="v">${escapeHtml(data.applicationId)}</div>
+                    <div class="k">ID клиента</div><div class="v">${escapeHtml(data.clientId)}</div>
+                    <div class="k">Кредитный скор</div><div class="v">${escapeHtml(data.creditScore)}</div>
+                    <div class="k">Уровень риска</div><div class="v">${escapeHtml(data.riskLevel)}</div>
+                </div>
+
+                ${reasonsBlock}
+            </div>
+        `);
+    }
+
+    function renderOffer(message) {
+        const data = message.data || {};
+
+        addCard(`
+            <div class="card offer">
+                <div class="meta">
+                    <div class="type">Кредитное предложение</div>
+                    <div class="time">${formatDateTime(message.timestamp) || getNow()}</div>
+                </div>
+
+                <div class="title">Сформировано предложение <span class="pill info">ОФФЕР</span></div>
+
+                <div class="kv">
+                    <div class="k">ID запроса</div><div class="v">${escapeHtml(data.requestId)}</div>
+                    <div class="k">ID клиента</div><div class="v">${escapeHtml(data.clientId)}</div>
+                    <div class="k">ID заявки</div><div class="v">${escapeHtml(data.applicationId)}</div>
+                    <div class="k">ID продукта</div><div class="v">${escapeHtml(data.productId)}</div>
+                    <div class="k">Одобренная сумма</div><div class="v">${formatMoney(data.approvedAmount)}</div>
+                    <div class="k">Срок кредита</div><div class="v">${formatMonths(data.termMonths)}</div>
+                    <div class="k">Годовая ставка (APR)</div><div class="v">${escapeHtml(data.annualPercentageRate)}%</div>
+                    <div class="k">Ежемесячный платёж</div><div class="v">${formatMoney(data.monthlyPayment)}</div>
+                    <div class="k">Действует до</div><div class="v">${formatDateTime(data.expiresAt)}</div>
+                </div>
+            </div>
+        `);
+    }
+
+    function sendSubscriptions() {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            const message = {
+                cmd: 'SUBSCRIBE',
+                types: Array.from(subscriptions)
+            };
+            socket.send(JSON.stringify(message));
+            console.log('[WS] Sent subscriptions:', Array.from(subscriptions));
+        }
+    }
+
+    function startPing() {
+        if (pingInterval) {
+            clearInterval(pingInterval);
+        }
+
+        pingInterval = setInterval(() => {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                const pingTime = Date.now();
+                const pingMessage = {
+                    type: 'PING',
+                    sentAt: pingTime
+                };
+                socket.send(JSON.stringify(pingMessage));
+                console.log('[WS] Sent PING at', pingTime);
+            }
+        }, 10000);
+    }
+
+    function stopPing() {
+        if (pingInterval) {
+            clearInterval(pingInterval);
+            pingInterval = null;
+        }
+        resetPingStatus();
+    }
+
+    function connectWebSocket() {
+        socket = new WebSocket('ws://localhost:8084/ws/notifications');
+
+        socket.onopen = () => {
+            statusEl.textContent = 'WS: Подключено';
+            statusEl.classList.remove('bad');
+            statusEl.classList.add('ok');
+            console.log('[WebSocket] Соединение установлено');
+
+            sendSubscriptions();
+            startPing();
+        };
+
+        socket.onmessage = (event) => {
+            console.log('[WebSocket] Получено сообщение:', event.data);
+
+            let message;
+            try {
+                message = JSON.parse(event.data);
+            } catch (error) {
+                console.error('[WebSocket] Ошибка парсинга JSON:', error);
+                addCard(`
+                    <div class="card declined">
+                        <div class="meta">
+                            <div class="type">Ошибка формата</div>
+                            <div class="time">${getNow()}</div>
+                        </div>
+                        <div class="title">Некорректное сообщение</div>
+                        <div class="v">${escapeHtml(event.data.substring(0, 200))}</div>
+                    </div>
+                `);
+                return;
+            }
+
+            // Handle PONG
+            if (message.type === 'PONG') {
+                const latency = message.sentAt ? Date.now() - message.sentAt : null;
+                updatePingStatus(latency);
+                console.log('[WS] Received PONG, latency:', latency, 'ms');
+                return;
+            }
+
+            // Handle SUBSCRIBED confirmation
+            if (message.type === 'SUBSCRIBED') {
+                console.log('[WS] Subscription confirmed:', message.types);
+                return;
+            }
+
+            switch (message.type) {
+                case 'ASSESSMENT_COMPLETED':
+                    renderAssessment(message);
+                    break;
+                case 'OFFER_GENERATED':
+                    renderOffer(message);
+                    break;
+                default:
+                    console.warn('[WebSocket] Неизвестный тип события:', message.type);
+                    addCard(`
+                        <div class="card">
+                            <div class="meta">
+                                <div class="type">${escapeHtml(message.type || 'UNKNOWN')}</div>
+                                <div class="time">${formatDateTime(message.timestamp) || getNow()}</div>
+                            </div>
+                            <div class="title">Необработанное событие</div>
+                            <div class="v">${escapeHtml(JSON.stringify(message, null, 2).substring(0, 300))}</div>
+                        </div>
+                    `);
+            }
+        };
+
+        socket.onclose = (event) => {
+            statusEl.textContent = 'Переподключение...';
+            statusEl.classList.remove('ok');
+            statusEl.classList.add('bad');
+            console.log('[WebSocket] Соединение закрыто:', event.code, event.reason);
+            stopPing();
+            setTimeout(connectWebSocket, 2000);
+        };
+
+        socket.onerror = (error) => {
+            statusEl.textContent = 'Ошибка соединения';
+            statusEl.classList.remove('ok');
+            statusEl.classList.add('bad');
+            console.error('[WebSocket] Ошибка:', error);
+        };
+    }
+
+    clearBtn.addEventListener('click', () => {
+        const cards = feedEl.querySelectorAll('.card');
+        cards.forEach(card => {
+            card.style.transition = 'all 0.2s ease';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.95)';
+            setTimeout(() => card.remove(), 200);
+        });
+        count = 0;
+        updateCounter();
+        console.log('[UI] История очищена');
+    });
+
+    // Filter event listeners
+    document.querySelectorAll('.filter-option input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+            const eventType = e.target.value;
+            if (e.target.checked) {
+                subscriptions.add(eventType);
+            } else {
+                subscriptions.delete(eventType);
+            }
+            console.log('[UI] Subscriptions updated:', Array.from(subscriptions));
+            sendSubscriptions();
+        });
+    });
+
+    updateCounter();
+    connectWebSocket();
+    console.log('[UI] Приложение запущено');
+</script>
+</body>
+</html>

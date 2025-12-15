@@ -1,0 +1,297 @@
+scalar BigDecimal
+scalar DateTime
+scalar Date
+
+
+type Client {
+    id: ID!
+    cif: String!
+    fullName: String!
+    birthDate: Date!
+    email: String!
+    annualIncome: BigDecimal!
+    totalMonthlyDebtPayment: BigDecimal!
+    employmentStatus: EmploymentStatus!
+    createdDate: DateTime!
+    updatedDate: DateTime!
+    active: Boolean!
+    applications(active: Boolean = true): [Application!]!
+    payments(active: Boolean = true): [Payment!]!
+}
+
+type Application {
+    id: ID!
+    amount: BigDecimal!
+    term: Int!
+    purpose: Purpose!
+    applicationStatus: ApplicationStatus!
+    createdDate: DateTime!
+    updatedDate: DateTime!
+    active: Boolean!
+    client: Client!
+    offers(active: Boolean = true): [Offer!]!
+}
+
+type Product {
+    id: ID!
+    code: String!
+    name: String!
+    description: String
+    version: Int
+    purpose: Purpose!
+    minAmount: BigDecimal!
+    maxAmount: BigDecimal!
+    minTermMonths: Int!
+    maxTermMonths: Int!
+    baseAprMin: BigDecimal!
+    baseAprMax: BigDecimal!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    offers(active: Boolean = true): [Offer!]!
+    active: Boolean!
+}
+
+type Offer {
+    id: ID!
+    approvedAmount: BigDecimal!
+    termMonths: Int!
+    apr: BigDecimal!
+    monthlyPayment: BigDecimal!
+    expiresAt: DateTime!
+    status: OfferStatus!
+    active: Boolean!
+    application: Application!
+    product: Product!
+    payments(active: Boolean = true): [Payment!]!
+}
+
+type Payment {
+    id: ID!
+    amount: BigDecimal!
+    dueDate: DateTime!
+    processedAt: DateTime
+    status: PaymentStatus!
+    reference: String
+    offer: Offer!
+    client: Client!
+    active: Boolean!
+}
+
+
+type ClientPage {
+    content: [Client!]!
+    pageNumber: Int!
+    pageSize: Int!
+    totalElements: Int!
+    totalPages: Int!
+    last: Boolean!
+}
+
+type ApplicationPage {
+    content: [Application!]!
+    pageNumber: Int!
+    pageSize: Int!
+    totalElements: Int!
+    totalPages: Int!
+    last: Boolean!
+}
+
+type OfferPage {
+    content: [Offer!]!
+    pageNumber: Int!
+    pageSize: Int!
+    totalElements: Int!
+    totalPages: Int!
+    last: Boolean!
+}
+
+type PaymentPage {
+    content: [Payment!]!
+    pageNumber: Int!
+    pageSize: Int!
+    totalElements: Int!
+    totalPages: Int!
+    last: Boolean!
+}
+
+
+type Assessment {
+    applicationId: ID!
+    clientId: ID!
+    creditScore: Float!
+    approved: Boolean!
+    riskLevel: RiskLevel!
+    reasons: [String!]!
+}
+
+enum EmploymentStatus {
+    EMPLOYED
+    SELF_EMPLOYED
+    UNEMPLOYED
+}
+
+enum Purpose {
+    CONSUMER
+    MORTGAGE
+    AUTO
+    BUSINESS
+    EDUCATION
+    MEDICAL
+    REFINANCE
+    SECURED
+    UNSECURED
+    OVERDRAFT
+}
+
+enum ApplicationStatus {
+    REVIEWING
+    APPROVED
+    REJECTED
+}
+
+enum OfferStatus {
+    PROPOSED
+    ACCEPTED
+    REJECTED
+    EXPIRED
+    CANCELED
+}
+
+enum PaymentStatus {
+    PLANNED
+    COMPLETED
+    FAILED
+    DELAYED
+    CANCELED
+}
+
+enum RiskLevel {
+    LOW
+    MEDIUM
+    HIGH
+}
+
+
+
+
+type Query {
+    client(id: ID!): Client
+    clientByCif(cif: String!): Client
+    clientByEmail(email: String!): Client
+    clients(page: Int = 0, size: Int = 10, active: Boolean = true): ClientPage!
+
+    application(id: ID!): Application
+    applications( clientId: ID, status: ApplicationStatus, page: Int = 0, size: Int = 10, active: Boolean = true): ApplicationPage!
+
+    product(id: ID!): Product
+    productByCode(code: String!): Product
+    products(purpose: Purpose, active: Boolean = true): [Product!]!
+
+    offer(id: ID!): Offer
+    offers(page: Int = 0, size: Int = 10, active: Boolean = true): OfferPage!
+    offersByApplication(applicationId: ID!, active: Boolean = true): [Offer!]!
+    offersByProduct(productId: ID!, active: Boolean = true): [Offer!]!
+    currentOffer(applicationId: ID!): Offer
+
+    payment(id: ID!): Payment
+    paymentByReference(reference: String!): Payment
+    paymentsByOffer(offerId: ID!, active: Boolean = true): [Payment!]!
+    paymentsByClient(clientId: ID!, active: Boolean = true): [Payment!]!
+    payments(page: Int = 0, size: Int = 10, active: Boolean = true): PaymentPage!
+}
+
+
+
+
+input ClientCreateInput {
+    cif: String!
+    fullName: String!
+    birthDate: Date!
+    email: String!
+    annualIncome: BigDecimal!
+    totalMonthlyDebtPayment: BigDecimal!
+    employmentStatus: EmploymentStatus!
+}
+
+input ClientUpdateInput {
+    email: String!
+    annualIncome: BigDecimal!
+    totalMonthlyDebtPayment: BigDecimal!
+    employmentStatus: EmploymentStatus!
+}
+
+input ApplicationCreateInput {
+    clientId: ID!
+    amount: BigDecimal!
+    term: Int!
+    purpose: Purpose!
+}
+
+input ApplicationUpdateInput {
+    amount: BigDecimal!
+    term: Int!
+}
+
+input ProductCreateInput {
+    code: String!
+    name: String!
+    description: String
+    version: Int!
+    purpose: Purpose!
+    minAmount: BigDecimal!
+    maxAmount: BigDecimal!
+    minTermMonths: Int!
+    maxTermMonths: Int!
+    baseAprMin: BigDecimal!
+    baseAprMax: BigDecimal!
+}
+
+input ProductUpdateInput {
+    name: String!
+    description: String
+    version: Int!
+    minAmount: BigDecimal!
+    maxAmount: BigDecimal!
+    minTermMonths: Int!
+    maxTermMonths: Int!
+    baseAprMin: BigDecimal!
+    baseAprMax: BigDecimal!
+}
+
+enum OfferDecision {
+    ACCEPTED
+    REJECTED
+}
+input OfferDecisionInput {
+    decision: OfferDecision!
+}
+
+input PaymentStatusUpdateInput {
+    status: PaymentStatus!
+    reference: String
+}
+
+type Mutation {
+    addClient(input: ClientCreateInput!): Client!
+    updateClient(id: ID!, input: ClientUpdateInput!): Client!
+    deleteClient(id: ID!): ID
+
+    addApplication(input: ApplicationCreateInput!): Application!
+    updateApplication(id: ID!, input: ApplicationUpdateInput!): Application!
+    deleteApplication(id: ID!): ID
+
+    createProduct(input: ProductCreateInput!): Product!
+    updateProduct(id: ID!, input: ProductUpdateInput!): Product!
+    deleteProduct(id: ID!): ID
+
+    decideOffer(id: ID!, input: OfferDecisionInput!): Offer!
+    cancelAllOffersByApplication(applicationId: ID!): ID
+
+    updatePaymentStatus(id: ID!, input: PaymentStatusUpdateInput!): Payment!
+}
+
+
+type Subscription {
+    assessmentUpdates(applicationId: ID!): Assessment!
+    offerProposals(applicationId: ID!): Offer!
+}
