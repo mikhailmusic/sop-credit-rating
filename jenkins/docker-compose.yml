@@ -1,0 +1,48 @@
+
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jenkins
+    user: root
+    ports:
+      - "8085:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins-data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../:/workspace
+      - maven-cache:/root/.m2
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+    networks:
+      - ci-cd-net
+    restart: unless-stopped
+
+  # gitea:
+  #   image: gitea/gitea:latest
+  #   container_name: gitea
+  #   ports:
+  #     - "3001:3000"
+  #     - "2222:22"
+  #   volumes:
+  #     - gitea-data:/data
+  #   environment:
+  #     - USER_UID=1000
+  #     - USER_GID=1000
+  #     - GITEA__security__INSTALL_LOCK=true
+  #     - GITEA__webhook__ALLOWED_HOST_LIST=private
+  #     - GITEA__server__ROOT_URL=http://gitea:3000
+  #   networks:
+  #     - ci-cd-net
+  #   restart: unless-stopped
+
+networks:
+  ci-cd-net:
+    driver: bridge
+
+volumes:
+  jenkins-data:
+  maven-cache:
+  # gitea-data:
