@@ -20,23 +20,23 @@ services:
       - ci-cd-net
     restart: unless-stopped
 
-  # gitea:
-  #   image: gitea/gitea:latest
-  #   container_name: gitea
-  #   ports:
-  #     - "3001:3000"
-  #     - "2222:22"
-  #   volumes:
-  #     - gitea-data:/data
-  #   environment:
-  #     - USER_UID=1000
-  #     - USER_GID=1000
-  #     - GITEA__security__INSTALL_LOCK=true
-  #     - GITEA__webhook__ALLOWED_HOST_LIST=private
-  #     - GITEA__server__ROOT_URL=http://gitea:3000
-  #   networks:
-  #     - ci-cd-net
-  #   restart: unless-stopped
+  gitea:
+    image: gitea/gitea:latest
+    container_name: gitea
+    ports:
+      - "3001:3000"
+      - "2222:22"
+    volumes:
+      - gitea-data:/data
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__security__INSTALL_LOCK=true
+      - GITEA__webhook__ALLOWED_HOST_LIST=private
+      - GITEA__server__ROOT_URL=http://gitea:3000
+    networks:
+      - ci-cd-net
+    restart: unless-stopped
 
 networks:
   ci-cd-net:
@@ -45,4 +45,4 @@ networks:
 volumes:
   jenkins-data:
   maven-cache:
-  # gitea-data:
+  gitea-data:
