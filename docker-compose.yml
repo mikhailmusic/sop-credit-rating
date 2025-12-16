@@ -50,9 +50,9 @@ services:
 
   # Инфраструктура: Метрики
   prometheus:
-    image: prom/prometheus
+    build:
+      context: ./prometheus
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
     ports:
       - "9090:9090"

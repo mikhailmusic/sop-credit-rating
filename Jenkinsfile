@@ -21,17 +21,6 @@ pipeline {
                 checkout scm
             }
         }
-
-        stage('Cleanup Old Deployment') {
-            steps {
-                echo 'Cleanup only this compose project'
-                script {
-                    sh '''
-                        docker compose down -v --rmi all --remove-orphans || true
-                    '''
-                }
-            }
-        }
         
         stage('Build Contracts') {
             steps {
@@ -90,7 +79,17 @@ pipeline {
             }
         }
         
-
+        stage('Cleanup Old Deployment') {
+            steps {
+                echo 'Cleanup only this compose project'
+                script {
+                    sh '''
+                        docker compose down -v --rmi all --remove-orphans || true
+                    '''
+                }
+            }
+        }
+        
         
         stage('Build Docker Images') {
             steps {
