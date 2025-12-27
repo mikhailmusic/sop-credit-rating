@@ -118,10 +118,10 @@ type PaymentPage {
 type Assessment {
     applicationId: ID!
     clientId: ID!
-    creditScore: Float!
+    creditScore: BigDecimal!
     approved: Boolean!
     riskLevel: RiskLevel!
-    reasons: [String!]!
+    rejectionReasons: [String!]!
 }
 
 enum EmploymentStatus {

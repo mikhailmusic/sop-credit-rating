@@ -3,10 +3,9 @@ package rut.miit.sopcreditrating.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.annotation.RabbitListenerConfigurer;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistrar;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.boot.autoconfigure.amqp.RabbitTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.Validator;
@@ -44,17 +43,16 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory, Jackson2JsonMessageConverter converter) {
-        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
-        rabbitTemplate.setMessageConverter(converter);
+    public RabbitTemplateCustomizer rabbitTemplateCustomizer(Jackson2JsonMessageConverter messageConverter) {
+        return template -> {
+            template.setMessageConverter(messageConverter);
 
-        // Устанавливаем callback для publisher confirms
-        rabbitTemplate.setConfirmCallback((correlationData, ack, cause) -> {
-            if (!ack) {
-                System.err.println("NACK: Message delivery failed! " + cause);
-            }
-        });
-
-        return rabbitTemplate;
+            // Устанавливаем callback для publisher confirms
+            template.setConfirmCallback((correlationData, ack, cause) -> {
+                if (!ack) {
+                    System.out.println("NACK: Message delivery failed! " + cause);
+                }
+            });
+        };
     }
 }
