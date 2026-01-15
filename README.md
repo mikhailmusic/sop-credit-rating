@@ -4,7 +4,7 @@
 
 ## Архитектура системы
 
-![Схема взаимодействия сервисов](docs/architecture.svg)
+<img src="docs/architecture.svg" alt="Схема взаимодействия сервисов">
 
 ## Сервисы проекта
 
@@ -38,8 +38,9 @@
 ### Требования
 
 - Docker и Docker Compose
-- Bash (для запуска скриптов)
 - Java 17+ и Maven (встроен в проекты через Maven Wrapper)
+
+Скрипты доступны в `.sh` (Linux/macOS) и `.bat` (Windows) вариантах.
 
 ### Запуск системы
 
@@ -75,52 +76,64 @@
 
 **Swagger UI - документация API клиентов**
 
-![Swagger UI](docs/demo/swagger-ui.png)
+<div align="center">
+    <img src="docs/demo/swagger-ui.png" width="80%" alt="Swagger UI">
+</div>
 
 **Корневая точка входа REST API с гипермедиа**
 
-![REST Root Endpoint](docs/demo/rest-root.png)
+<div align="center">
+    <img src="docs/demo/rest-root.png" width="80%" alt="REST Root Endpoint">
+</div>
 
 **Гипермедийные ссылки в Postman**
 
-![Hypermedia Links](docs/demo/postman-hateoas.png)
+<div align="center">
+    <img src="docs/demo/postman-hateoas.png" width="80%" alt="Hypermedia Links">
+</div>
 
 ### GraphQL API
 
 **Запрос данных клиента и его заявок**
 
-![GraphQL Query](docs/demo/graphiql-query.png)
+<img src="docs/demo/graphiql-query.png" alt="GraphQL Query">
 
 **Мутация: создание нового клиента**
 
-![GraphQL Mutation](docs/demo/graphiql-mutation.png)
+<img src="docs/demo/graphiql-mutation.png" alt="GraphQL Mutation">
 
 **Подписка на результаты оценки заявки**
 
-![GraphQL Subscription](docs/demo/graphiql-subscription.png)
+<img src="docs/demo/graphiql-subscription.png" alt="GraphQL Subscription">
 
 ### Асинхронная обработка (RabbitMQ)
 
 **Список очередей в RabbitMQ Management**
 
-![RabbitMQ Queues](docs/demo/rabbitmq-queues.png)
+<img src="docs/demo/rabbitmq-queues.png" alt="RabbitMQ Queues">
 
 **Fanout и Topic Exchange с привязанными очередями**
 
-![RabbitMQ Fanout](docs/demo/rabbitmq-fanout.png)
+<img src="docs/demo/rabbitmq-fanout.png" alt="RabbitMQ Fanout">
 
 ### Real-time уведомления (WebSocket)
 
 **Интерфейс получения уведомлений**
 
-![WebSocket Notifications](docs/demo/websocket-notifications.png)
+<div align="center">
+    <img src="docs/demo/websocket-notifications.png" width="80%" alt="WebSocket Notifications">
+</div>
 
 ### Мониторинг и трассировка
 
 **Дашборд Grafana**
 
-![Grafana Dashboard](docs/demo/grafana-dashboard.png)
+<div align="center">
+    <img src="docs/demo/grafana-dashboard.png" width="80%" alt="Grafana Dashboard">
+</div>
 
 **Распределённая трассировка запроса в Zipkin**
 
-![Zipkin Trace](docs/demo/zipkin-trace.png)
+<div align="center">
+    <img src="docs/demo/zipkin-trace.png" width="80%" alt="Zipkin Trace">
+</div>
